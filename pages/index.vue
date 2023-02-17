@@ -5,21 +5,22 @@
     <div class="max-w-md w-full space-y-8">
       <div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Stay in touch, <br />
+          Keep in touch, <br />
           but contactless
         </h2>
       </div>
-      <img :src="url" alt="Workflow" width="225" height="225" class="mx-auto" />
-      <form class="mt-8 space-y-6" @click.prevent="submitForm">
+      <!-- <Qrcode :text="message" class="mx-auto"></Qrcode> -->
+      <canvas ref="$canvas" class="mx-auto w-80 h-80"></canvas>
+      <form class="mt-8 space-y-6">
         <div class="rounded-md shadow-sm -space-y-px">
           <div>
-            <label for="first_name" class="sr-only">First name</label>
+            <label for="first_name" class="sr-only"> First name </label>
             <input
               id="first_name"
               name="first_name"
               type="text"
               autocomplete="given-name"
-              v-model="firstName"
+              v-model="form.firstName"
               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               placeholder="First name"
             />
@@ -31,7 +32,7 @@
               name="last_name"
               type="text"
               autocomplete="family-name"
-              v-model="lastName"
+              v-model="form.lastName"
               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               placeholder="Last name"
             />
@@ -43,7 +44,7 @@
               name="phone_number"
               type="text"
               autocomplete="tel"
-              v-model="phoneNumber"
+              v-model="form.phoneNumber"
               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               placeholder="Phone number"
             />
@@ -55,9 +56,21 @@
               name="email"
               type="email"
               autocomplete="email"
-              v-model="email"
+              v-model="form.email"
               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               placeholder="email"
+            />
+          </div>
+          <div>
+            <label for="linkedin_url" class="sr-only">Organisation</label>
+            <input
+              id="organisation"
+              name="organisation"
+              type="text"
+              autocomplete="organisation"
+              v-model="form.companyName"
+              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              placeholder="Keep in touch, Inc."
             />
           </div>
           <div>
@@ -69,71 +82,63 @@
               name="linkedin_url"
               type="text"
               autocomplete="url"
-              v-model="linkedinUrl"
+              v-model="form.linkedinUrl"
               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="LinkedIn URL"
+              placeholder="LinkedIn profile url"
             />
           </div>
         </div>
-        <!-- <div>
-          <button
-            type="submit"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Get my QR code
-          </button>
-        </div> -->
       </form>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-
-const firstName = ref("");
-const lastName = ref("");
-const phoneNumber = ref("");
-const linkedinUrl = ref("");
-const email = ref("");
-const qrCodeUrl = ref("");
-const vCard = ref("");
-
-const defaultQrcode =
-  "https://chart.googleapis.com/chart?cht=qr&chs=450x450&chl=Hey! I'm using ContactLess!";
-
-const url = computed(() => {
-  return !isFormEmpty() ? qrCodeUrl.value : defaultQrcode;
+const form = reactive({
+  firstName: "",
+  lastName: "",
+  phoneNumber: "",
+  linkedinUrl: "",
+  companyName: "",
+  email: "",
 });
 
-const isFormEmpty = () => {
+const isFormEmpty = computed(() => {
   return (
-    firstName.value === "" &&
-    lastName.value === "" &&
-    phoneNumber.value === "" &&
-    linkedinUrl.value === "" &&
-    email.value === ""
+    form.firstName === "" &&
+    form.lastName === "" &&
+    form.phoneNumber === "" &&
+    form.linkedinUrl === "" &&
+    form.companyName === "" &&
+    form.email === ""
   );
-};
+});
 
-const submitForm = () => {
-  const formData = {
-    firstName: firstName.value,
-    lastName: lastName.value,
-    phoneNumber: phoneNumber.value,
-    linkedinUrl: linkedinUrl.value,
-    email: email.value,
-  };
-
-  vCard.value = `BEGIN:VCARD
-VERSION:3.0
-N:${formData.lastName};${formData.firstName};;;
-TEL;TYPE=WORK,VOICE:${formData.phoneNumber}
-EMAIL:${formData.email}
-URL;TYPE=WORK:${formData.linkedinUrl}
+function buildVcard() {
+  const vCard = `BEGIN:VCARD
+VERSION:4.0
+N:${form.firstName};${form.lastName};;;
+FN:${form.firstName} ${form.lastName}
+ORG:${form.companyName}
+TEL;TYPE=work,voice:${form.phoneNumber}
+EMAIL:${form.email}
+URL:${form.linkedinUrl}
 END:VCARD`;
+  return vCard;
+}
+const $canvas = ref<HTMLCanvasElement>();
+const defaultMessage = "Keep in touch, but contactless";
 
-  const encodedUrl = encodeURIComponent(vCard.value);
-  qrCodeUrl.value = `https://chart.googleapis.com/chart?cht=qr&chs=450x450&chl=${encodedUrl}`;
-};
+onMounted(() => {
+  if ($canvas.value) {
+    useQrCode(defaultMessage, $canvas.value);
+  }
+});
+
+watch(form, () => {
+  const message = isFormEmpty.value ? defaultMessage : buildVcard();
+  if ($canvas.value) {
+    useQrCode(message, $canvas.value);
+  }
+});
 </script>

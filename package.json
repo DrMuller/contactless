@@ -10,6 +10,10 @@
   "devDependencies": {
     "@nuxtjs/i18n": "^8.0.0-beta.9",
     "@nuxtjs/tailwindcss": "^6.4.1",
-    "nuxt": "^3.2.2"
+    "@types/qrcode": "^1.5.0",
+    "nuxt": "^3.0.0"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.1"
   }
 }
